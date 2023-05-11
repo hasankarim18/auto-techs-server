@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors')
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.PORT || 5000
 
@@ -36,11 +36,39 @@ async function run() {
     // Send a ping to confirm a successful connection
 
      const database = client.db("autoTechsDb");
-     const autoTechsCollections = database.collection("services");
+     const serviceCollection = database.collection("services");
+     const bookingsCollection = database.collection("bookings");
 
     app.get("/services", async (req, res) => {
-      const services = await autoTechsCollections.find().toArray();
+      const services = await serviceCollection.find().toArray();
       res.send(services);
+    });
+
+    app.get('/services/:id', async (req, res)=> {
+         const id = req.params.id
+         const idS = id.toString();
+         const query = { _id: new ObjectId(idS) };
+
+        const options = {
+          // sort matched documents in descending order by rating          
+          // Include only the `title` and `imdb` fields in the returned document
+          projection: { _id: 1, title: 1, price:1, service_id:1},
+        };
+
+         const result = await serviceCollection.findOne(query);
+         res.send(result)
+    } )
+
+    // bookings 
+    app.post("/bookings", async (req, res) => {
+      const bookings = req.body;
+     // console.log(bookings);
+      const doc = {
+        title: "Record of a Shriveled Datum",
+        content: "No bytes, no problem. Just insert a document, in MongoDB",
+      };
+      const result = await bookingsCollection.insertOne(bookings);
+      res.send(result)
     });
 
 
