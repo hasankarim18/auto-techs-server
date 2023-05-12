@@ -59,8 +59,7 @@ async function run() {
 
     // getting some booking data
 
-    app.get('/bookings', async(req, res)=> {     
-       console.log(req.query);
+    app.get('/bookings', async(req, res)=> {         
        
        let query = {}
        if(req.query.email){
@@ -76,7 +75,7 @@ async function run() {
       const query = {
         email: req.params.email,
       };
-      console.log(req.query);
+      
       const options = {      
         projection: { _id: 1, service_id: 1, service: 1, img:1, date:1,price:1 }
       };
@@ -95,6 +94,13 @@ async function run() {
       };
       const result = await bookingsCollection.insertOne(bookings);
       res.send(result)
+    });
+
+    app.delete("/bookings/:id", async (req, res) => {     
+      const id  = req.params.id;     
+       const query = { _id: new ObjectId(id)  };
+       const result = await bookingsCollection.deleteOne(query);
+        res.send(result)
     });
 
 
