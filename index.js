@@ -49,9 +49,7 @@ async function run() {
          const idS = id.toString();
          const query = { _id: new ObjectId(idS) };
 
-        const options = {
-          // sort matched documents in descending order by rating          
-          // Include only the `title` and `imdb` fields in the returned document
+        const options = {          
           projection: { _id: 1, title: 1, price:1, service_id:1},
         };
 
@@ -59,9 +57,37 @@ async function run() {
          res.send(result)
     } )
 
+    // getting some booking data
+
+    app.get('/bookings', async(req, res)=> {     
+       console.log(req.query);
+       
+       let query = {}
+       if(req.query.email){
+        query = {email: req.query.email }
+       }
+      const result = await bookingsCollection.find(query).toArray();
+      res.send(result)
+    } )
+
+    // 
+
+    app.get('/bookings/:email', async (req, res)=> {
+      const query = {
+        email: req.params.email,
+      };
+      console.log(req.query);
+      const options = {      
+        projection: { _id: 1, service_id: 1, service: 1, img:1, date:1,price:1 }
+      };
+      const result = await bookingsCollection.find(query, options).toArray()
+      res.send(result)
+    } )
+
     // bookings 
     app.post("/bookings", async (req, res) => {
       const bookings = req.body;
+     
      // console.log(bookings);
       const doc = {
         title: "Record of a Shriveled Datum",
@@ -70,6 +96,8 @@ async function run() {
       const result = await bookingsCollection.insertOne(bookings);
       res.send(result)
     });
+
+
 
 
     await client.db("admin").command({ ping: 1 });
