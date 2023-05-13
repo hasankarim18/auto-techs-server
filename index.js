@@ -1,4 +1,5 @@
 const express = require('express')
+const jwt = require("jsonwebtoken");
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
@@ -39,6 +40,26 @@ async function run() {
      const serviceCollection = database.collection("services");
      const bookingsCollection = database.collection("bookings");
 
+    /*************************** jwt */
+    app.post('/jwt', (req, res)=> {
+      const user = req.body;
+    
+     const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+       expiresIn:'1h',
+     });
+     
+     res.send({token})
+    } )    
+
+
+
+
+
+
+    /*************************** jwt */
+
+
+    // services routes
     app.get("/services", async (req, res) => {
       const services = await serviceCollection.find().toArray();
       res.send(services);
@@ -77,7 +98,7 @@ async function run() {
       };
       
       const options = {      
-        projection: { _id: 1, service_id: 1, service: 1, img:1, date:1,price:1 }
+        projection: { _id: 1, service_id: 1, service: 1, img:1, date:1,price:1, status:1 }
       };
       const result = await bookingsCollection.find(query, options).toArray()
       res.send(result)
@@ -102,6 +123,23 @@ async function run() {
        const result = await bookingsCollection.deleteOne(query);
         res.send(result)
     });
+
+    // pathc
+    app.patch('/bookings/:id',  async (req, res)=> {
+        const updatedBooking = req.body;
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) };
+           const options = { upsert: true };
+        console.log(id,updatedBooking.status);
+         const updateDoc = {
+           $set: {
+             status: updatedBooking.status,
+           },
+         };
+
+       const result = await bookingsCollection.updateOne(filter, updateDoc);
+       res.send(result)
+    } )
 
 
 
