@@ -30,6 +30,31 @@ const client = new MongoClient(uri, {
   },
 });
 
+/** 
+ *  1. Authorization comes from bookings router because it is protected router 
+ */
+
+const verifyJWT = (req, res, next)=> {
+  const authorization = req.headers.authorization
+  if(!authorization){
+    return res.status(401).send({error:true, message:'unauthorized access authorization not found'})
+  }
+
+  const token = authorization.split(' ')[1]
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded)=> {
+    if(error){
+      return res.status(401).send({error:true, message:'unauthorized access. Authorization expired'});
+    }
+
+    req.decoded = decoded;
+    next()
+
+  } )
+
+}
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -50,10 +75,6 @@ async function run() {
      
      res.send({token})
     } )    
-
-
-
-
 
 
     /*************************** jwt */
@@ -80,29 +101,33 @@ async function run() {
 
     // getting some booking data
 
-    app.get('/bookings', async(req, res)=> {         
-       
-       let query = {}
-       if(req.query.email){
-        query = {email: req.query.email }
-       }
+    app.get("/bookings", verifyJWT, async (req, res) => {
+      const decoded = req.decoded
+      console.log('come back after verification', decoded);
+      if(decoded.email !== req.query.email ){
+        return res.status(403).send({error:1, message:'forbidden access'})
+      }
+      let query = {};
+      if (req.query.email) {
+        query = { email: req.query.email };
+      }
       const result = await bookingsCollection.find(query).toArray();
-      res.send(result)
-    } )
+      res.send(result);
+    });
 
     // 
 
-    app.get('/bookings/:email', async (req, res)=> {
-      const query = {
-        email: req.params.email,
-      };
+    // app.get('/bookings/:email', async (req, res)=> {
+    //   const query = {
+    //     email: req.params.email,
+    //   };
       
-      const options = {      
-        projection: { _id: 1, service_id: 1, service: 1, img:1, date:1,price:1, status:1 }
-      };
-      const result = await bookingsCollection.find(query, options).toArray()
-      res.send(result)
-    } )
+    //   const options = {      
+    //     projection: { _id: 1, service_id: 1, service: 1, img:1, date:1,price:1, status:1 }
+    //   };
+    //   const result = await bookingsCollection.find(query, options).toArray()
+    //   res.send(result)
+    // } )
 
     // bookings 
     app.post("/bookings", async (req, res) => {
