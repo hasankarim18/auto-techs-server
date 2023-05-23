@@ -70,7 +70,7 @@ async function run() {
       const user = req.body;
     
      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-       expiresIn:'1h',
+       expiresIn: "2 days",
      });
      
      res.send({token})
@@ -82,7 +82,23 @@ async function run() {
 
     // services routes
     app.get("/services", async (req, res) => {
-      const services = await serviceCollection.find().toArray();
+
+      const sort = req.query.sort 
+      const search = req.query.search
+    
+
+      const query = {title: {$regex: search, $options:'i'}}
+   //   const query = {price: {$gt:50, $lte: 200}}
+
+        const options = {
+          // sort returned documents in ascending order by title (A->Z)
+          sort: { price: sort === 'asc' ? 1: -1 },
+          // Include only the `title` and `imdb` fields in each returned document
+        
+        };
+
+
+      const services = await serviceCollection.find(query, options).toArray();
       res.send(services);
     });
 
@@ -115,21 +131,7 @@ async function run() {
       res.send(result);
     });
 
-    // 
-
-    // app.get('/bookings/:email', async (req, res)=> {
-    //   const query = {
-    //     email: req.params.email,
-    //   };
-      
-    //   const options = {      
-    //     projection: { _id: 1, service_id: 1, service: 1, img:1, date:1,price:1, status:1 }
-    //   };
-    //   const result = await bookingsCollection.find(query, options).toArray()
-    //   res.send(result)
-    // } )
-
-    // bookings 
+    
     app.post("/bookings", async (req, res) => {
       const bookings = req.body;
      
@@ -183,7 +185,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res)=> {
-    res.send('Auto techs are comming to your city')
+    res.send('Auto techs are comming to your country and city ')
 } )
 
 app.listen(port, ()=> {
