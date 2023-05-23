@@ -88,6 +88,9 @@ async function run() {
     
 
       const query = {title: {$regex: search, $options:'i'}}
+
+      //  comparison operator 
+      // needs to indexed
    //   const query = {price: {$gt:50, $lte: 200}}
 
         const options = {
